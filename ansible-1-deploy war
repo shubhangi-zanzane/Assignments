@@ -1,0 +1,65 @@
+---
+- hosts: devlinux
+  user: shubhangi
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: installing java
+      yum:
+        name: java-1.8.0-openjdk-devel.x86_64
+        state: present
+
+    - name: installing git
+      yum:
+        name: git
+        state: present
+
+    - name: downloading tomcat
+      get_url:
+        url: https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.91/bin/apache-tomcat-9.0.91.zip
+        dest: /mnt/apache-tomcat-9.0.91.zip
+
+    - name: Create installation directory
+      file:
+       path: /mnt
+       state: directory
+
+    - name: Unzip Tomcat file
+      unarchive:
+        src: /mnt/apache-tomcat-9.0.91.zip
+        dest: /mnt
+        remote_src: yes
+
+    - name: downloading maven
+      yum:
+        name: maven
+        state: present
+ - name: cloning the git repo
+      git:
+        repo: https://github.com/Shantanumajan6/project.git
+        dest: /mnt
+
+    - name: Build the project using Maven
+      command: mvn clean install
+      args:
+        chdir: /mnt/project
+
+    - name: Copy the WAR file to Tomcat webapps
+      copy:
+        src: /mnt/apache-tomcat-9.0.91/project/target/LoginWebApp.war
+        dest: /mnt/apache-tomcat-9.0.91/webapps
+        remote_src: yes
+
+    - name: Ensure Tomcat directory is executable
+      file:
+        path: /mnt/apache-tomcat-9.0.91
+        mode: '0777'
+        recurse: yes
+        state: directory
+
+    - name: Run Tomcat
+      shell: ./startup.sh
+      args:
+       chdir: /mnt/apache-tomcat-9.0.91/bin
+
