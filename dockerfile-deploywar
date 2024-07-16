@@ -1,0 +1,11 @@
+# Use the official Tomcat image from the Docker Hub
+FROM tomcat:latest
+
+# Copy the WAR file to the webapps directory of Tomcat
+COPY project/target/LoginWebApp.war  /usr/local/tomcat/webapps/
+
+# Expose port 8080
+EXPOSE 8080
+
+# Start Tomcat
+CMD ["catalina.sh", "run"]
